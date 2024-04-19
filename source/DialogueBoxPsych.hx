@@ -23,6 +23,7 @@ using StringTools;
 typedef DialogueCharacterFile = {
 	var image:String;
 	var dialogue_pos:String;
+	var no_antialiasing:Bool;
 
 	var animations:Array<DialogueAnimArray>;
 	var position:Array<Float>;
@@ -49,8 +50,8 @@ typedef DialogueLine = {
 	var text:Null<String>;
 	var boxState:Null<String>;
 	var speed:Null<Float>;
-	//var skipdelay:Null<Int>;
-	//var append:Null<Bool>; //thinkin bout having some rpg type text shit.
+	var sound:Null<String>;
+	var textSize:Null<Float>;
 }
 
 class DialogueCharacter extends FlxSprite
@@ -81,6 +82,9 @@ class DialogueCharacter extends FlxSprite
 		reloadCharacterJson(character);
 		frames = Paths.getSparrowAtlas('dialogue/' + jsonFile.image);
 		reloadAnimations();
+
+		antialiasing = ClientPrefs.globalAntialiasing;
+		if(jsonFile.no_antialiasing == true) antialiasing = false;
 	}
 
 	public function reloadCharacterJson(character:String) {
@@ -248,7 +252,6 @@ class DialogueBoxPsych extends FlxSpriteGroup
 			var char:DialogueCharacter = new DialogueCharacter(x + offsetPos, y, individualChar);
 			char.setGraphicSize(Std.int(char.width * DialogueCharacter.DEFAULT_SCALE * char.jsonFile.scale));
 			char.updateHitbox();
-			char.antialiasing = ClientPrefs.globalAntialiasing;
 			char.scrollFactor.set();
 			char.alpha = 0.00001;
 			add(char);
@@ -279,6 +282,7 @@ class DialogueBoxPsych extends FlxSpriteGroup
 	var scrollSpeed = 4500;
 	var daText:Alphabet = null;
 	var ignoreThisFrame:Bool = true; //First frame is reserved for loading dialogue images
+	var prevTextSize:Float = 0.7;
 	override function update(elapsed:Float)
 	{
 		if(ignoreThisFrame) {
@@ -294,12 +298,13 @@ class DialogueBoxPsych extends FlxSpriteGroup
 			if(PlayerSettings.player1.controls.ACCEPT) {
 				if(!daText.finishedText) {
 					if(daText != null) {
+						prevTextSize = daText.textSize;
 						daText.killTheTimer();
 						daText.kill();
 						remove(daText);
 						daText.destroy();
 					}
-					daText = new Alphabet(DEFAULT_TEXT_X, DEFAULT_TEXT_Y, textToType, false, true, 0.0, 0.7);
+					daText = new Alphabet(DEFAULT_TEXT_X, DEFAULT_TEXT_Y, textToType, false, true, 0.0, prevTextSize);
 					add(daText);
 					
 					if(skipDialogueThing != null) {
@@ -324,7 +329,7 @@ class DialogueBoxPsych extends FlxSpriteGroup
 					daText.destroy();
 					daText = null;
 					updateBoxOffsets(box);
-					FlxG.sound.music.fadeOut(1, 0);
+					if (Conductor.songPosition < 0) FlxG.sound.music.fadeOut(1, 0);
 				} else {
 					startNextDialog();
 				}
@@ -451,6 +456,7 @@ class DialogueBoxPsych extends FlxSpriteGroup
 
 		if(curDialogue.text == null || curDialogue.text.length < 1) curDialogue.text = ' ';
 		if(curDialogue.boxState == null) curDialogue.boxState = 'normal';
+		if(curDialogue.textSize == null) curDialogue.textSize = 0.7;
 		if(curDialogue.speed == null || Math.isNaN(curDialogue.speed)) curDialogue.speed = 0.05;
 
 		var animName:String = curDialogue.boxState;
@@ -492,7 +498,8 @@ class DialogueBoxPsych extends FlxSpriteGroup
 		}
 
 		textToType = curDialogue.text;
-		daText = new Alphabet(DEFAULT_TEXT_X, DEFAULT_TEXT_Y, textToType, false, true, curDialogue.speed, 0.7);
+		Alphabet.setDialogueSound(curDialogue.sound);
+		daText = new Alphabet(DEFAULT_TEXT_X, DEFAULT_TEXT_Y, textToType, false, true, curDialogue.speed, curDialogue.textSize);
 		add(daText);
 
 		var char:DialogueCharacter = arrayCharacters[character];

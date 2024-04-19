@@ -12,11 +12,12 @@ using StringTools;
 
 class DiscordClient
 {
+	public static var isInitialized:Bool = false;
 	public function new()
 	{
 		trace("Discord Client starting...");
 		DiscordRpc.start({
-			clientID: "863222024192262205",
+			clientID: "922592774866477086",
 			onReady: onReady,
 			onError: onError,
 			onDisconnected: onDisconnected
@@ -44,7 +45,7 @@ class DiscordClient
 			details: "In the Menus",
 			state: null,
 			largeImageKey: 'icon',
-			largeImageText: "Psych Engine"
+			largeImageText: "Gamer Engine"
 		});
 	}
 
@@ -65,6 +66,7 @@ class DiscordClient
 			new DiscordClient();
 		});
 		trace("Discord Client initialized");
+		isInitialized = true;
 	}
 
 	public static function changePresence(details:String, state:Null<String>, ?smallImageKey : String, ?hasStartTimestamp : Bool, ?endTimestamp: Float)
@@ -80,7 +82,7 @@ class DiscordClient
 			details: details,
 			state: state,
 			largeImageKey: 'icon',
-			largeImageText: "Engine Version: " + MainMenuState.psychEngineVersion,
+			largeImageText: "gaming",
 			smallImageKey : smallImageKey,
 			// Obtained times are in milliseconds so they are divided so Discord can use it
 			startTimestamp : Std.int(startTimestamp / 1000),

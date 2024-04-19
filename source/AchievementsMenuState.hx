@@ -56,6 +56,7 @@ class AchievementsMenuState extends MusicBeatState
 			optionText.isMenuItem = true;
 			optionText.x += 280;
 			optionText.xAdd = 200;
+			optionText.yAdd = -65;
 			optionText.targetY = i;
 			grpOptions.add(optionText);
 
@@ -78,13 +79,24 @@ class AchievementsMenuState extends MusicBeatState
 	override function update(elapsed:Float) {
 		super.update(elapsed);
 
-		if (controls.UI_UP_P) {
+		if (controls.UI_UP_P || FlxG.mouse.wheel == 1) {
 			changeSelection(-1);
 		}
-		if (controls.UI_DOWN_P) {
+		if (controls.UI_DOWN_P || FlxG.mouse.wheel == -1) {
 			changeSelection(1);
 		}
-
+		if (controls.ACCEPT) {
+			if(Achievements.achievementsStuff[achievementIndex[curSelected]][2] == 'cheater')
+			{
+				var poop:String = Highscore.formatSong('stop', 2);
+				trace(poop);
+				PlayState.SONG = Song.loadFromJson('the Most Awesome chart Ever', 'stop');
+				PlayState.inminigame = false;
+				FreeplayState.destroyFreeplayVocals();
+				Paths.setCurrentLevel('shared');
+				LoadingState.loadAndSwitchState(new PlayState(), true);
+			}
+		}
 		if (controls.BACK) {
 			FlxG.sound.play(Paths.sound('cancelMenu'));
 			MusicBeatState.switchState(new MainMenuState());
@@ -118,6 +130,7 @@ class AchievementsMenuState extends MusicBeatState
 		}
 		descText.text = Achievements.achievementsStuff[achievementIndex[curSelected]][1];
 		FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+		if(Achievements.achievementsStuff[achievementIndex[curSelected]][2] == 'cheater') descText.text += '\nPress [ACCEPT] to play from here';
 	}
 	#end
 }

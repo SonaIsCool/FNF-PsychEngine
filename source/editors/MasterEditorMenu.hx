@@ -31,7 +31,7 @@ class MasterEditorMenu extends MusicBeatState
 	private var grpTexts:FlxTypedGroup<Alphabet>;
 	private var directories:Array<String> = [null];
 
-	private var curSelected = 0;
+	private static var curSelected = 0;
 	private var curDirectory = 0;
 	private var directoryTxt:FlxText;
 
@@ -56,6 +56,8 @@ class MasterEditorMenu extends MusicBeatState
 			var leText:Alphabet = new Alphabet(0, (70 * i) + 30, options[i], true, false);
 			leText.isMenuItem = true;
 			leText.targetY = i;
+			leText.screenCenter(X);
+			leText.forceX = leText.x;
 			grpTexts.add(leText);
 		}
 		
@@ -86,11 +88,11 @@ class MasterEditorMenu extends MusicBeatState
 
 	override function update(elapsed:Float)
 	{
-		if (controls.UI_UP_P)
+		if (controls.UI_UP_P || FlxG.mouse.wheel == 1)
 		{
 			changeSelection(-1);
 		}
-		if (controls.UI_DOWN_P)
+		if (controls.UI_DOWN_P || FlxG.mouse.wheel == -1)
 		{
 			changeSelection(1);
 		}
@@ -116,6 +118,7 @@ class MasterEditorMenu extends MusicBeatState
 				case 'Character Editor':
 					LoadingState.loadAndSwitchState(new CharacterEditorState(Character.DEFAULT_CHARACTER, false));
 				case 'Week Editor':
+					WeekEditorState.changedstate = false;
 					MusicBeatState.switchState(new WeekEditorState());
 				case 'Menu Character Editor':
 					MusicBeatState.switchState(new MenuCharacterEditorState());

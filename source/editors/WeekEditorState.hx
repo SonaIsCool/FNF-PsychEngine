@@ -32,6 +32,7 @@ import sys.io.File;
 import sys.FileSystem;
 #end
 import WeekData;
+import flixel.addons.display.FlxBackdrop;
 
 using StringTools;
 
@@ -39,6 +40,7 @@ class WeekEditorState extends MusicBeatState
 {
 	var txtWeekTitle:FlxText;
 	var bgSprite:FlxSprite;
+	var bgYellow:FlxSprite;
 	var lock:FlxSprite;
 	var txtTracklist:FlxText;
 	var grpWeekCharacters:FlxTypedGroup<MenuCharacter>;
@@ -46,6 +48,7 @@ class WeekEditorState extends MusicBeatState
 	var missingFileText:FlxText;
 
 	var weekFile:WeekFile = null;
+	public static var changedstate:Bool = false;
 	public function new(weekFile:WeekFile = null)
 	{
 		super();
@@ -60,7 +63,7 @@ class WeekEditorState extends MusicBeatState
 		txtWeekTitle.alpha = 0.7;
 		
 		var ui_tex = Paths.getSparrowAtlas('campaign_menu_UI_assets');
-		var bgYellow:FlxSprite = new FlxSprite(0, 56).makeGraphic(FlxG.width, 386, 0xFFF9CF51);
+		var bgYellow:FlxSprite = new FlxSprite(0, 56).makeGraphic(FlxG.width, 386, FlxColor.WHITE);
 		bgSprite = new FlxSprite(0, 56);
 		bgSprite.antialiasing = ClientPrefs.globalAntialiasing;
 
@@ -115,6 +118,15 @@ class WeekEditorState extends MusicBeatState
 
 		FlxG.mouse.visible = true;
 
+		scsR.value = Math.round(save_stupid1);
+		scsG.value = Math.round(save_stupid2);
+		scsB.value = Math.round(save_stupid3);
+
+		scsR_f.value = Math.round(save_stupid4);
+		scsG_f.value = Math.round(save_stupid5);
+		scsB_f.value = Math.round(save_stupid6);
+
+		defaultColors(changedstate);
 		super.create();
 	}
 
@@ -127,8 +139,8 @@ class WeekEditorState extends MusicBeatState
 		];
 		UI_box = new FlxUITabMenu(null, tabs, true);
 		UI_box.resize(250, 375);
-		UI_box.x = FlxG.width - UI_box.width;
-		UI_box.y = FlxG.height - UI_box.height;
+		UI_box.x = FlxG.width - UI_box.width - 5;
+		UI_box.y = FlxG.height - UI_box.height - 5;
 		UI_box.scrollFactor.set();
 		addWeekUI();
 		addOtherUI();
@@ -144,6 +156,7 @@ class WeekEditorState extends MusicBeatState
 		add(loadWeekButton);
 		
 		var freeplayButton:FlxButton = new FlxButton(0, 650, "Freeplay", function() {
+			changedstate = true;
 			MusicBeatState.switchState(new WeekEditorFreeplayState(weekFile));
 			
 		});
@@ -229,6 +242,30 @@ class WeekEditorState extends MusicBeatState
 	var weekBeforeInputText:FlxUIInputText;
 	var difficultiesInputText:FlxUIInputText;
 	var lockedCheckbox:FlxUICheckBox;
+	var hiddenUntilUnlockCheckbox:FlxUICheckBox;
+
+	public static var scsR:FlxUINumericStepper;
+	public static var scsG:FlxUINumericStepper;
+	public static var scsB:FlxUINumericStepper;
+	public static var scsR_f:FlxUINumericStepper;
+	public static var scsG_f:FlxUINumericStepper;
+	public static var scsB_f:FlxUINumericStepper;
+
+	public static var stupid1:Int = 249;
+	public static var stupid2:Int = 207;
+	public static var stupid3:Int = 81;
+	public static var stupid4:Int = 51;
+	public static var stupid5:Int = 255;
+	public static var stupid6:Int = 255;
+
+	public static var save_stupid1:Int = 249;
+	public static var save_stupid2:Int = 207;
+	public static var save_stupid3:Int = 81;
+	public static var save_stupid4:Int = 51;
+	public static var save_stupid5:Int = 255;
+	public static var save_stupid6:Int = 255;
+	
+	var copyColor:FlxButton;
 
 	function addOtherUI() {
 		var tab_group = new FlxUI(null, UI_box);
@@ -239,9 +276,17 @@ class WeekEditorState extends MusicBeatState
 		{
 			weekFile.startUnlocked = !lockedCheckbox.checked;
 			lock.visible = lockedCheckbox.checked;
+			hiddenUntilUnlockCheckbox.alpha = 0.4 + 0.6 * (lockedCheckbox.checked ? 1 : 0);
 		};
 
-		weekBeforeInputText = new FlxUIInputText(10, lockedCheckbox.y + 55, 100, '', 8);
+		hiddenUntilUnlockCheckbox = new FlxUICheckBox(10, lockedCheckbox.y + 25, null, null, "Hidden until Unlocked", 110);
+		hiddenUntilUnlockCheckbox.callback = function()
+		{
+			weekFile.hiddenUntilUnlocked = hiddenUntilUnlockCheckbox.checked;
+		};
+		hiddenUntilUnlockCheckbox.alpha = 0.4;
+
+		weekBeforeInputText = new FlxUIInputText(10, hiddenUntilUnlockCheckbox.y + 55, 100, '', 8);
 		blockPressWhileTypingOn.push(weekBeforeInputText);
 
 		difficultiesInputText = new FlxUIInputText(10, weekBeforeInputText.y + 60, 200, '', 8);
@@ -252,10 +297,214 @@ class WeekEditorState extends MusicBeatState
 		tab_group.add(new FlxText(difficultiesInputText.x, difficultiesInputText.y + 20, 0, 'Default difficulties are "Easy, Normal, Hard"\nwithout quotes.'));
 		tab_group.add(weekBeforeInputText);
 		tab_group.add(difficultiesInputText);
+		tab_group.add(hiddenUntilUnlockCheckbox);
 		tab_group.add(lockedCheckbox);
+
+		
+		var funiY:Float = 228;
+
+		scsR = new FlxUINumericStepper(10, funiY, 20, 255, 0, 255, 0);
+		scsG = new FlxUINumericStepper(80, funiY, 20, 255, 0, 255, 0);
+		scsB = new FlxUINumericStepper(150,funiY, 20, 255, 0, 255, 0);
+
+		tab_group.add(scsR);
+		tab_group.add(scsG);
+		tab_group.add(scsB);
+
+		scsR_f = new FlxUINumericStepper(10, (scsR.y + scsR.height) + 30, 20, 255, 0, 255, 0);
+		scsG_f = new FlxUINumericStepper(80, (scsR.y + scsR.height) + 30, 20, 255, 0, 255, 0);
+		scsB_f = new FlxUINumericStepper(150,(scsR.y + scsR.height) + 30, 20, 255, 0, 255, 0);
+
+		tab_group.add(scsR_f);
+		tab_group.add(scsG_f);
+		tab_group.add(scsB_f);
+
+		if(weekFile.storyColor == null) // aka it doesnt exist
+		{
+			weekFile.storyColor = [249, 207, 81];
+		}
+		weekFile.storyColor[0] = Math.round(scsR.value);
+		weekFile.storyColor[1] = Math.round(scsG.value);
+		weekFile.storyColor[2] = Math.round(scsB.value);
+		scsR.value = Math.round(weekFile.storyColor[0]);
+		scsG.value = Math.round(weekFile.storyColor[1]);
+		scsB.value = Math.round(weekFile.storyColor[2]);
+		
+		if(weekFile.storyFlashColor == null) // aka it doesnt exist
+		{
+			weekFile.storyFlashColor = [51, 255, 255];
+		}
+		weekFile.storyFlashColor[0] = Math.round(scsR_f.value);
+		weekFile.storyFlashColor[1] = Math.round(scsG_f.value);
+		weekFile.storyFlashColor[2] = Math.round(scsB_f.value);
+		scsR_f.value = Math.round(weekFile.storyFlashColor[0]);
+		scsG_f.value = Math.round(weekFile.storyFlashColor[1]);
+		scsB_f.value = Math.round(weekFile.storyFlashColor[2]);
+		//updateColorShit();
+		//updateFlashy();
+		tab_group.add(new FlxText(scsR.x, scsR.y - 20, 0, 'Campaign BG Color:'));
+		tab_group.add(new FlxText(scsR_f.x, scsR_f.y - 20, 0, 'Campaign Title Flash Color:'));
+
+		var thing:FlxButton = new FlxButton(10, (scsR_f.y + scsR_f.height) + 15, "Default Colors", function() {
+			defaultColors(false);
+		});
+		/*var thing2:FlxButton = new FlxButton(thing.x + 120, (scsR_f.y + scsR_f.height) + 15, "Autosaved Colors", function() {
+			defaultColors(true);
+		});*/
+		var pasteColor:FlxButton = new FlxButton(thing.x + 150, (scsR_f.y + scsR_f.height) + 30, "Paste Colors", function() {
+			if(Clipboard.text != null) {
+				var leColor:Array<Int> = [];
+				var splitted:Array<String> = Clipboard.text.trim().split(',');
+				for (i in 0...splitted.length) {
+					var toPush:Int = Std.parseInt(splitted[i]);
+					if(!Math.isNaN(toPush)) {
+						if(toPush > 255) toPush = 255;
+						else if(toPush < 0) toPush *= -1;
+						leColor.push(toPush);
+					}
+				}
+
+				if(leColor.length > 2) {
+					scsR.value = leColor[0]; // if you want to use freeplay colors in story mode and viceversa
+					scsG.value = leColor[1];
+					scsB.value = leColor[2];
+					if(leColor.length > 5) {
+						scsR_f.value = leColor[3];
+						scsG_f.value = leColor[4];
+						scsB_f.value = leColor[5];
+					}
+					updateColorShit();
+					updateFlashy();
+				}
+			}
+		});
+		copyColor = new FlxButton(pasteColor.x, pasteColor.y - pasteColor.height, "Copy Colors", function() {
+			Clipboard.text = '${scsR.value},${scsG.value},${scsB.value},${scsR_f.value},${scsG_f.value},${scsB_f.value}';
+		});
+
+		tab_group.add(thing);
+		tab_group.add(copyColor);
+		tab_group.add(pasteColor);
+
 		UI_box.addGroup(tab_group);
 	}
+	function updateColorShit()
+	{
+		save_stupid1 = Math.round(scsR.value);
+		save_stupid2 = Math.round(scsG.value);
+		save_stupid3 = Math.round(scsB.value);
+		if(weekFile.storyColor != null) {
+			weekFile.storyColor[0] = Math.round(scsR.value);
+			weekFile.storyColor[1] = Math.round(scsG.value);
+			weekFile.storyColor[2] = Math.round(scsB.value);
 
+			if (bgYellow != null) bgYellow.color = FlxColor.fromRGB(Std.int(scsR.value), Std.int(scsG.value), Std.int(scsB.value));
+			if (bgSprite != null) bgSprite.color = FlxColor.fromRGB(Std.int(scsR.value), Std.int(scsG.value), Std.int(scsB.value));
+			for (bruj in 0...grpWeekCharacters.length)
+			{
+				if (grpWeekCharacters.members[bruj] != null) grpWeekCharacters.members[bruj].color = FlxColor.fromRGB(Std.int(scsR.value), Std.int(scsG.value), Std.int(scsB.value));
+			}
+
+			scsR.value = Math.round(weekFile.storyColor[0]);
+			scsG.value = Math.round(weekFile.storyColor[1]);
+			scsB.value = Math.round(weekFile.storyColor[2]);
+		}
+		else
+		{
+			weekFile.storyColor[0] = stupid1;
+			weekFile.storyColor[1] = stupid2;
+			weekFile.storyColor[2] = stupid3;
+			
+			if (bgYellow != null) bgYellow.color = FlxColor.fromRGB(Std.int(scsR.value), Std.int(scsG.value), Std.int(scsB.value));
+			if (bgSprite != null) bgSprite.color = FlxColor.fromRGB(Std.int(scsR.value), Std.int(scsG.value), Std.int(scsB.value));
+			for (bruj in 0...grpWeekCharacters.length)
+			{
+				if (grpWeekCharacters.members[bruj] != null) grpWeekCharacters.members[bruj].color = FlxColor.fromRGB(Std.int(scsR.value), Std.int(scsG.value), Std.int(scsB.value));
+			}
+
+			scsR.value = Math.round(weekFile.storyColor[0]);
+			scsG.value = Math.round(weekFile.storyColor[1]);
+			scsB.value = Math.round(weekFile.storyColor[2]);
+		}
+		/*save_stupid1 = Math.round(weekFile.storyColor[0]);
+		save_stupid2 = Math.round(weekFile.storyColor[1]);
+		save_stupid3 = Math.round(weekFile.storyColor[2]);*/
+	}
+
+	function updateFlashy()
+	{
+		save_stupid4 = Math.round(scsR_f.value);
+		save_stupid5 = Math.round(scsG_f.value);
+		save_stupid6 = Math.round(scsB_f.value);
+		if(weekFile.storyFlashColor != null) {
+			weekFile.storyFlashColor[0] = Math.round(scsR_f.value);
+			weekFile.storyFlashColor[1] = Math.round(scsG_f.value);
+			weekFile.storyFlashColor[2] = Math.round(scsB_f.value);
+
+			weekThing.flashColor = FlxColor.fromRGB(Std.int(scsR_f.value), Std.int(scsG_f.value), Std.int(scsB_f.value));
+
+			scsR_f.value = Math.round(weekFile.storyFlashColor[0]);
+			scsG_f.value = Math.round(weekFile.storyFlashColor[1]);
+			scsB_f.value = Math.round(weekFile.storyFlashColor[2]);
+		}
+		else
+		{
+			weekFile.storyFlashColor[0] = stupid4;
+			weekFile.storyFlashColor[1] = stupid5;
+			weekFile.storyFlashColor[2] = stupid6;
+
+			weekThing.flashColor = FlxColor.fromRGB(Std.int(scsR_f.value), Std.int(scsG_f.value), Std.int(scsB_f.value));
+
+			scsR_f.value = Math.round(weekFile.storyFlashColor[0]);
+			scsG_f.value = Math.round(weekFile.storyFlashColor[1]);
+			scsB_f.value = Math.round(weekFile.storyFlashColor[2]);
+		}
+	}
+	function defaultColors(uhh:Bool = false) {
+		if (!uhh) {
+			scsR.value = stupid1;
+			scsG.value = stupid2;
+			scsB.value = stupid3;
+
+			scsR_f.value = stupid4;
+			scsG_f.value = stupid5;
+			scsB_f.value = stupid6;
+
+			weekFile.storyColor[0] = Math.round(scsR.value);
+			weekFile.storyColor[1] = Math.round(scsG.value);
+			weekFile.storyColor[2] = Math.round(scsB.value);
+
+			weekFile.storyFlashColor[0] = Math.round(scsR_f.value);
+			weekFile.storyFlashColor[1] = Math.round(scsG_f.value);
+			weekFile.storyFlashColor[2] = Math.round(scsB_f.value);
+		} else {
+			scsR.value = save_stupid1;
+			scsG.value = save_stupid2;
+			scsB.value = save_stupid3;
+
+			scsR_f.value = save_stupid4;
+			scsG_f.value = save_stupid5;
+			scsB_f.value = save_stupid6;
+
+			weekFile.storyColor[0] = Math.round(scsR.value);
+			weekFile.storyColor[1] = Math.round(scsG.value);
+			weekFile.storyColor[2] = Math.round(scsB.value);
+
+			weekFile.storyFlashColor[0] = Math.round(scsR_f.value);
+			weekFile.storyFlashColor[1] = Math.round(scsG_f.value);
+			weekFile.storyFlashColor[2] = Math.round(scsB_f.value);
+
+			save_stupid1 = Math.round(weekFile.storyColor[0]);
+			save_stupid2 = Math.round(weekFile.storyColor[1]);
+			save_stupid3 = Math.round(weekFile.storyColor[2]);
+
+			save_stupid4 = Math.round(weekFile.storyFlashColor[0]);
+			save_stupid5 = Math.round(weekFile.storyFlashColor[1]);
+			save_stupid6 = Math.round(weekFile.storyFlashColor[2]);
+		}
+		updateColorShit();
+		updateFlashy();
+	}
 	//Used on onCreate and when you load a week
 	function reloadAllShit() {
 		var weekString:String = weekFile.songs[0][0];
@@ -281,6 +530,38 @@ class WeekEditorState extends MusicBeatState
 
 		lockedCheckbox.checked = !weekFile.startUnlocked;
 		lock.visible = lockedCheckbox.checked;
+		
+		hiddenUntilUnlockCheckbox.checked = weekFile.hiddenUntilUnlocked;
+		hiddenUntilUnlockCheckbox.alpha = 0.4 + 0.6 * (lockedCheckbox.checked ? 1 : 0);
+
+		scsR.value = stupid1;
+		scsG.value = stupid2;
+		scsB.value = stupid3;
+
+		scsR_f.value = stupid4;
+		scsG_f.value = stupid5;
+		scsB_f.value = stupid6;
+
+		if(weekFile.storyColor != null) {
+			/*weekFile.storyColor[0] = Math.round(scsR.value);
+			weekFile.storyColor[1] = Math.round(scsG.value);
+			weekFile.storyColor[2] = Math.round(scsB.value);*/
+			scsR.value = Math.round(weekFile.storyColor[0]);
+			scsG.value = Math.round(weekFile.storyColor[1]);
+			scsB.value = Math.round(weekFile.storyColor[2]);
+		}
+
+		if(weekFile.storyFlashColor != null) {
+			/*weekFile.storyFlashColor[0] = Math.round(scsR_f.value);
+			weekFile.storyFlashColor[1] = Math.round(scsG_f.value);
+			weekFile.storyFlashColor[2] = Math.round(scsB_f.value);*/
+			scsR_f.value = Math.round(weekFile.storyFlashColor[0]);
+			scsG_f.value = Math.round(weekFile.storyFlashColor[1]);
+			scsB_f.value = Math.round(weekFile.storyFlashColor[2]);
+		}
+
+		updateColorShit();
+		updateFlashy();
 
 		reloadBG();
 		reloadWeekThing();
@@ -354,7 +635,7 @@ class WeekEditorState extends MusicBeatState
 
 		#if desktop
 		// Updating Discord Rich Presence
-		DiscordClient.changePresence("Week Editor", "Editting: " + weekFileName);
+		DiscordClient.changePresence("Week Editor", "Editing: " + weekFileName);
 		#end
 	}
 	
@@ -403,11 +684,20 @@ class WeekEditorState extends MusicBeatState
 			} else if(sender == difficultiesInputText) {
 				weekFile.difficulties = difficultiesInputText.text.trim();
 			}
+		} else if(id == FlxUINumericStepper.CHANGE_EVENT && (sender is FlxUINumericStepper)) {
+			if(sender == scsR || sender == scsG || sender == scsB) {
+				updateColorShit();
+			} else if(sender == scsR_f || sender == scsG_f || sender == scsB_f) {
+				updateFlashy();
+			} 
 		}
 	}
 	
+	var elapsedtime:Float = 0;
 	override function update(elapsed:Float)
 	{
+		elapsedtime += elapsed;
+
 		if(loadedWeek != null) {
 			weekFile = loadedWeek;
 			loadedWeek = null;
@@ -428,6 +718,11 @@ class WeekEditorState extends MusicBeatState
 			}
 		}
 
+		copyColor.offset.set(FlxG.random.float(-2, 2), FlxG.random.float(-2, 2));
+		copyColor.angle = FlxG.random.float(-2, 2);
+		copyColor.label.angle = copyColor.angle;
+		copyColor.label.offset.copyFrom(copyColor.offset);
+
 		if(!blockInput) {
 			FlxG.sound.muteKeys = TitleState.muteKeys;
 			FlxG.sound.volumeDownKeys = TitleState.volumeDownKeys;
@@ -438,10 +733,36 @@ class WeekEditorState extends MusicBeatState
 			}
 		}
 
-		super.update(elapsed);
+		if (elapsedtime > 0.5) {
+			save_stupid1 = Math.round(weekFile.storyColor[0]);
+			save_stupid2 = Math.round(weekFile.storyColor[1]);
+			save_stupid3 = Math.round(weekFile.storyColor[2]);
+
+			save_stupid4 = Math.round(weekFile.storyFlashColor[0]);
+			save_stupid5 = Math.round(weekFile.storyFlashColor[1]);
+			save_stupid6 = Math.round(weekFile.storyFlashColor[2]);
+
+			//trace('$save_stupid1, $save_stupid2, $save_stupid3, $save_stupid4, $save_stupid5, $save_stupid6');
+
+			/*lock.y = weekThing.y;
+			missingFileText.y = weekThing.y + 36;
+			missingFileText.color = weekThing.color;*/
+		}
+		//trace(elapsed);
 
 		lock.y = weekThing.y;
 		missingFileText.y = weekThing.y + 36;
+		missingFileText.color = weekThing.color;
+		if(controls.ACCEPT)
+		{
+			weekThing.startFlashing();
+			if(weekThing.isFlashing) FlxG.sound.play(Paths.sound('confirmMenu'));
+			else {
+				FlxG.sound.play(Paths.sound('cancelMenu'));
+				weekThing.color = FlxColor.WHITE;
+			}
+		}
+		super.update(elapsed);
 	}
 
 	function recalculateStuffPosition() {
@@ -581,12 +902,18 @@ class WeekEditorFreeplayState extends MusicBeatState
 
 	var curSelected = 0;
 
+	var checker:FlxBackdrop = new FlxBackdrop(Paths.image('coolCheckerWeStoleFromMicdUpLol'), 0.2, 0.2, true, true);
 	override function create() {
 		bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
 		bg.antialiasing = ClientPrefs.globalAntialiasing;
 
 		bg.color = FlxColor.WHITE;
 		add(bg);
+
+		checker.velocity.x = -100;
+		checker.velocity.y = -50;
+		checker.color = bg.color;
+		add(checker);
 
 		grpSongs = new FlxTypedGroup<Alphabet>();
 		add(grpSongs);
@@ -598,8 +925,23 @@ class WeekEditorFreeplayState extends MusicBeatState
 			songText.targetY = i;
 			grpSongs.add(songText);
 
+			if (songText.width > 980)
+			{
+				var textScale:Float = 980 / songText.width;
+				songText.scale.x = textScale;
+				for (letter in songText.lettersArray)
+				{
+					letter.x *= textScale;
+					letter.offset.x *= textScale;
+				}
+				//songText.updateHitbox();
+				//trace(songs[i].songName + ' new scale: ' + textScale);
+			}
+
 			var icon:HealthIcon = new HealthIcon(weekFile.songs[i][1]);
 			icon.sprTracker = songText;
+			icon.offsetX = songText.width + 10;
+			icon.offsetY = -30;
 
 			// using a FlxGroup is too much fuss!
 			iconArray.push(icon);
@@ -704,6 +1046,20 @@ class WeekEditorFreeplayState extends MusicBeatState
 				}
 			}
 		});
+		var iconColor:FlxButton = new FlxButton(pasteColor.x, bgColorStepperR.y + 70, "Get Icon Color", function() {
+				var leColor:Array<Int> = [];
+				var coolColor = FlxColor.fromInt(CoolUtil.dominantColor(iconArray[curSelected]));
+				leColor.push(coolColor.red);
+				leColor.push(coolColor.green);
+				leColor.push(coolColor.blue);
+
+				if(leColor.length > 2) {
+					bgColorStepperR.value = leColor[0];
+					bgColorStepperG.value = leColor[1];
+					bgColorStepperB.value = leColor[2];
+					updateBG();
+				}
+		});
 
 		iconInputText = new FlxUIInputText(10, bgColorStepperR.y + 70, 100, '', 8);
 
@@ -721,6 +1077,7 @@ class WeekEditorFreeplayState extends MusicBeatState
 		tab_group.add(bgColorStepperB);
 		tab_group.add(copyColor);
 		tab_group.add(pasteColor);
+		tab_group.add(iconColor);
 		tab_group.add(iconInputText);
 		tab_group.add(hideFreeplayCheckbox);
 		UI_box.addGroup(tab_group);
@@ -773,7 +1130,22 @@ class WeekEditorFreeplayState extends MusicBeatState
 		updateBG();
 	}
 
+	var canshowcolor:Bool = false;
 	override function update(elapsed:Float) {
+		checker.color = bg.color;
+
+		if(FlxG.keys.justPressed.SPACE) canshowcolor = !canshowcolor;
+
+		if (canshowcolor)
+		{
+			var coolColor = FlxColor.fromInt(CoolUtil.dominantColor(iconArray[curSelected]));
+			grpSongs.members[curSelected].color = FlxColor.fromRGB(coolColor.red, coolColor.green, coolColor.blue);
+		}
+		else
+		{
+			grpSongs.members[curSelected].color = FlxColor.WHITE;
+		}
+
 		if(WeekEditorState.loadedWeek != null) {
 			super.update(elapsed);
 			FlxTransitionableState.skipNextTransIn = true;
@@ -799,8 +1171,8 @@ class WeekEditorFreeplayState extends MusicBeatState
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 			}
 
-			if(controls.UI_UP_P) changeSelection(-1);
-			if(controls.UI_DOWN_P) changeSelection(1);
+			if(controls.UI_UP_P || FlxG.mouse.wheel == 1) changeSelection(-1);
+			if(controls.UI_DOWN_P || FlxG.mouse.wheel == -1) changeSelection(1);
 		}
 		super.update(elapsed);
 	}

@@ -42,9 +42,16 @@ class DialogueBox extends FlxSpriteGroup
 
 		switch (PlayState.SONG.song.toLowerCase())
 		{
-			case 'senpai':
+			case 'senpai' | 'roses':
 				FlxG.sound.playMusic(Paths.music('Lunchbox'), 0);
 				FlxG.sound.music.fadeIn(1, 0, 0.8);
+				#if cpp
+				@:privateAccess
+				{
+					if (PlayState.SONG.song.toLowerCase() == 'roses')
+						lime.media.openal.AL.sourcef(FlxG.sound.music._channel.__source.__backend.handle, lime.media.openal.AL.PITCH, 0.8);
+				}
+				#end
 			case 'thorns':
 				FlxG.sound.playMusic(Paths.music('LunchboxScary'), 0);
 				FlxG.sound.music.fadeIn(1, 0, 0.8);

@@ -9,15 +9,21 @@ class NoteSplash extends FlxSprite
 	public var colorSwap:ColorSwap = null;
 	private var idleAnim:String;
 	private var textureLoaded:String = null;
+	var uhhh:String;
 
 	public function new(x:Float = 0, y:Float = 0, ?note:Int = 0) {
 		super(x, y);
 
 		var skin:String = 'noteSplashes';
+		uhhh = skin;
+		if(PlayState.SONG.splashSkin == null && PlayState.isPixelStage) skin = 'weeb/' + uhhh;
 		if(PlayState.SONG.splashSkin != null && PlayState.SONG.splashSkin.length > 0) skin = PlayState.SONG.splashSkin;
-
 		loadAnims(skin);
-		
+		if(PlayState.SONG.splashSkin == null && PlayState.isPixelStage && skin == ('weeb/' + uhhh))
+		{
+			setGraphicSize(Std.int(this.width * 6), Std.int(this.height * 6));
+			updateHitbox();
+		}
 		colorSwap = new ColorSwap();
 		shader = colorSwap.shader;
 
@@ -31,6 +37,7 @@ class NoteSplash extends FlxSprite
 
 		if(texture == null) {
 			texture = 'noteSplashes';
+			if(PlayState.SONG.splashSkin == null && PlayState.isPixelStage) texture = 'weeb/' + uhhh;
 			if(PlayState.SONG.splashSkin != null && PlayState.SONG.splashSkin.length > 0) texture = PlayState.SONG.splashSkin;
 		}
 
@@ -41,10 +48,15 @@ class NoteSplash extends FlxSprite
 		colorSwap.saturation = satColor;
 		colorSwap.brightness = brtColor;
 		offset.set(10, 10);
-
+		if(PlayState.SONG.splashSkin == null && PlayState.isPixelStage)
+		{
+			setGraphicSize(Std.int(this.width * 6), Std.int(this.height * 6));
+			antialiasing = false;
+			updateHitbox();
+		}
 		var animNum:Int = FlxG.random.int(1, 2);
 		animation.play('note' + note + '-' + animNum, true);
-		if(animation.curAnim != null)animation.curAnim.frameRate = 24 + FlxG.random.int(-2, 2);
+		if(animation.curAnim != null)animation.curAnim.frameRate = 24 + FlxG.random.int(-5, 5);
 	}
 
 	function loadAnims(skin:String) {

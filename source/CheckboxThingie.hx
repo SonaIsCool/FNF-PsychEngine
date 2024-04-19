@@ -1,5 +1,6 @@
 package;
 
+import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.graphics.frames.FlxAtlasFrames;
 
@@ -10,10 +11,13 @@ class CheckboxThingie extends FlxSprite
 	public var copyAlpha:Bool = true;
 	public var offsetX:Float = 0;
 	public var offsetY:Float = 0;
-	public function new(x:Float = 0, y:Float = 0, ?checked = false) {
+	public var hueshiftenabled:Bool = false;
+	public var huetouse:Int = 0;
+	public function new(x:Float = 0, y:Float = 0, ?checked = false, ?canbehued:Bool = false, ?randomhue:Bool = true) {
 		super(x, y);
 
-		frames = Paths.getSparrowAtlas('checkboxanim');
+		if (canbehued) frames = Paths.getSparrowAtlas('checkbox but red');
+		else frames = Paths.getSparrowAtlas('checkboxanim');
 		animation.addByPrefix("unchecked", "checkbox0", 24, false);
 		animation.addByPrefix("unchecking", "checkbox anim reverse", 24, false);
 		animation.addByPrefix("checking", "checkbox anim0", 24, false);
@@ -22,10 +26,18 @@ class CheckboxThingie extends FlxSprite
 		antialiasing = ClientPrefs.globalAntialiasing;
 		setGraphicSize(Std.int(0.9 * width));
 		updateHitbox();
-
+		this.hueshiftenabled = canbehued;
 		animationFinished(checked ? 'checking' : 'unchecking');
 		animation.finishCallback = animationFinished;
 		daValue = checked;
+
+		if(canbehued)
+		{
+			var newShader:ColorSwap = new ColorSwap();
+			if (!randomhue) newShader.hue = huetouse / 360;
+			else newShader.hue = FlxG.random.int(-180, 180) / 360;
+			this.shader = newShader.shader;
+		}
 	}
 
 	override function update(elapsed:Float) {

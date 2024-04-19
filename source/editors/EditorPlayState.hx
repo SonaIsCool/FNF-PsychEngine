@@ -440,7 +440,7 @@ class EditorPlayState extends MusicBeatState
 					if(daNote.isSustainNote && !daNote.animation.curAnim.name.endsWith('end')) {
 						time += 0.15;
 					}
-					StrumPlayAnim(true, Std.int(Math.abs(daNote.noteData)) % 4, time);
+					StrumPlayAnim(true, Std.int(Math.abs(daNote.noteData)) % 4, time, daNote);
 					daNote.hitByOpponent = true;
 
 					if (!daNote.isSustainNote)
@@ -735,7 +735,7 @@ class EditorPlayState extends MusicBeatState
 			{
 				if (Math.abs(note.noteData) == spr.ID)
 				{
-					spr.playAnim('confirm', true);
+					spr.playAnim('confirm', true, note);
 				}
 			});
 
@@ -967,7 +967,7 @@ class EditorPlayState extends MusicBeatState
 
 
 	// For Opponent's notes glow
-	function StrumPlayAnim(isDad:Bool, id:Int, time:Float) {
+	function StrumPlayAnim(isDad:Bool, id:Int, time:Float, ?notehsv:Note) {
 		var spr:StrumNote = null;
 		if(isDad) {
 			spr = strumLineNotes.members[id];
@@ -976,7 +976,7 @@ class EditorPlayState extends MusicBeatState
 		}
 
 		if(spr != null) {
-			spr.playAnim('confirm', true);
+			spr.playAnim('confirm', true, notehsv);
 			spr.resetAnim = time;
 		}
 	}

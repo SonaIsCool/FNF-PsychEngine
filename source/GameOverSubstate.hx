@@ -1,5 +1,6 @@
 package;
 
+import flixel.system.FlxSound;
 import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxSubState;
@@ -72,6 +73,7 @@ class GameOverSubstate extends MusicBeatSubstate
 		add(camFollowPos);
 	}
 
+	private static var confirmsound:FlxSound = null;
 	var isFollowingAlready:Bool = false;
 	override function update(elapsed:Float)
 	{
@@ -90,17 +92,25 @@ class GameOverSubstate extends MusicBeatSubstate
 
 		if (controls.BACK)
 		{
-			FlxG.sound.music.stop();
-			PlayState.deathCounter = 0;
-			PlayState.seenCutscene = false;
+			if(PlayState.SONG.song.toLowerCase() == 'stop')
+				MusicBeatState.resetState();
+			else {
+				FlxG.sound.music.stop();
+				PlayState.deathCounter = 0;
+				PlayState.seenCutscene = false;
 
-			if (PlayState.isStoryMode)
-				MusicBeatState.switchState(new StoryMenuState());
-			else
-				MusicBeatState.switchState(new FreeplayState());
+				if (PlayState.inminigame)
+					MusicBeatState.switchState(new MinigameSelectState());
+				else {
+				if (PlayState.isStoryMode)
+					MusicBeatState.switchState(new StoryMenuState());
+				else
+					MusicBeatState.switchState(new FreeplayState());
+				}
 
-			FlxG.sound.playMusic(Paths.music('freakyMenu'));
-			PlayState.instance.callOnLuas('onGameOverConfirm', [false]);
+				FlxG.sound.playMusic(Paths.music('freakyMenu'));
+				PlayState.instance.callOnLuas('onGameOverConfirm', [false]);
+			}
 		}
 
 		if (boyfriend.animation.curAnim.name == 'firstDeath')
@@ -144,6 +154,11 @@ class GameOverSubstate extends MusicBeatSubstate
 	{
 		if (!isEnding)
 		{
+			confirmsound = new FlxSound().loadEmbedded(Paths.music(endSoundName));
+			FlxG.sound.list.add(confirmsound);
+			confirmsound.play();
+			confirmsound.persist = true;
+			confirmsound.volume = 0.7;
 			isEnding = true;
 			boyfriend.playAnim('deathConfirm', true);
 			FlxG.sound.music.stop();

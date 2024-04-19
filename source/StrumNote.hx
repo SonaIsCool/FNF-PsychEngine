@@ -8,7 +8,7 @@ using StringTools;
 
 class StrumNote extends FlxSprite
 {
-	private var colorSwap:ColorSwap;
+	public var colorSwap:ColorSwap;
 	public var resetAnim:Float = 0;
 	private var noteData:Int = 0;
 	public var direction:Float = 90;//plan on doing scroll directions soon -bb
@@ -144,7 +144,7 @@ class StrumNote extends FlxSprite
 		super.update(elapsed);
 	}
 
-	public function playAnim(anim:String, ?force:Bool = false) {
+	public function playAnim(anim:String, ?force:Bool = false, ?notehsv:Note) {
 		animation.play(anim, force);
 		centerOffsets();
 		centerOrigin();
@@ -156,7 +156,12 @@ class StrumNote extends FlxSprite
 			colorSwap.hue = ClientPrefs.arrowHSV[noteData % 4][0] / 360;
 			colorSwap.saturation = ClientPrefs.arrowHSV[noteData % 4][1] / 100;
 			colorSwap.brightness = ClientPrefs.arrowHSV[noteData % 4][2] / 100;
-
+			if(animation.curAnim.name == 'confirm')
+			{
+				colorSwap.hue = notehsv.confirmHue;
+				colorSwap.saturation = notehsv.confirmSat;
+				colorSwap.brightness = notehsv.confirmBrt;
+			}
 			if(animation.curAnim.name == 'confirm' && !PlayState.isPixelStage) {
 				centerOrigin();
 			}

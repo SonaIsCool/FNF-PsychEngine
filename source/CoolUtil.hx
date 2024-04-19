@@ -11,6 +11,7 @@ import sys.FileSystem;
 #else
 import openfl.utils.Assets;
 #end
+import flixel.math.FlxMath;
 
 using StringTools;
 
@@ -24,6 +25,11 @@ class CoolUtil
 	public static var defaultDifficulty:String = 'Normal'; //The chart that has no suffix and starting difficulty on Freeplay/Story Mode
 
 	public static var difficulties:Array<String> = [];
+
+	public static var minValFloat = FlxMath.MIN_VALUE_FLOAT;
+	public static var minValInt = FlxMath.MIN_VALUE_INT;
+	public static var maxValFloat = FlxMath.MAX_VALUE_FLOAT;
+	public static var maxValInt = FlxMath.MAX_VALUE_INT;
 
 	public static function getDifficultyFilePath(num:Null<Int> = null)
 	{

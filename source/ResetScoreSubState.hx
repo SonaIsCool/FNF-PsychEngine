@@ -96,6 +96,8 @@ class ResetScoreSubState extends MusicBeatSubstate
 				} else {
 					Highscore.resetWeek(WeekData.weeksList[week], difficulty);
 				}
+				FlxG.camera.shake(0.1, 6);
+				FlxG.sound.play(Paths.sound('bigExplosion', 'shared'));
 			}
 			FlxG.sound.play(Paths.sound('cancelMenu'), 1);
 			close();

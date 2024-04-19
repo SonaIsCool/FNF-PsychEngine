@@ -34,6 +34,7 @@ class Note extends FlxSprite
 	public var sustainLength:Float = 0;
 	public var isSustainNote:Bool = false;
 	public var noteType(default, set):String = null;
+	public var scrollMulti(default, set):Float = 1;
 
 	public var eventName:String = '';
 	public var eventLength:Int = 0;
@@ -43,6 +44,7 @@ class Note extends FlxSprite
 	public var colorSwap:ColorSwap;
 	public var inEditor:Bool = false;
 	public var gfNote:Bool = false;
+	public var unremovable:Bool = false;
 	private var earlyHitMult:Float = 0.5;
 
 	public static var swagWidth:Float = 160 * 0.7;
@@ -57,6 +59,9 @@ class Note extends FlxSprite
 	public var noteSplashHue:Float = 0;
 	public var noteSplashSat:Float = 0;
 	public var noteSplashBrt:Float = 0;
+	public var confirmHue:Float = 0;
+	public var confirmSat:Float = 0;
+	public var confirmBrt:Float = 0;
 
 	public var offsetX:Float = 0;
 	public var offsetY:Float = 0;
@@ -70,12 +75,17 @@ class Note extends FlxSprite
 
 	public var hitHealth:Float = 0.023;
 	public var missHealth:Float = 0.0475;
+	public var rating:String = 'unknown';
+	public var ratingMod:Float = 0; //9 = unknown, 0.25 = shit, 0.5 = bad, 0.75 = good, 1 = sick
+	public var ratingDisabled:Bool = false;
 
 	public var texture(default, set):String = null;
 
 	public var noAnimation:Bool = false;
 	public var hitCausesMiss:Bool = false;
-	public var distance:Float = 2000;//plan on doing scroll directions soon -bb
+	public var distance:Float = 2000; //plan on doing scroll directions soon -bb
+
+	public var hitsoundDisabled:Bool = false;
 
 	private function set_texture(value:String):String {
 		if(texture != value) {
@@ -85,11 +95,25 @@ class Note extends FlxSprite
 		return value;
 	}
 
+	function set_scrollMulti(value:Float):Float {
+		if(noteData > -1) {
+			scrollMulti = value;
+			//trace('would be ${value}x of scroll speed but im gonna work on this later'); yeah how about we scrap that
+		}
+		return value;
+	}
+
 	private function set_noteType(value:String):String {
 		noteSplashTexture = PlayState.SONG.splashSkin;
 		colorSwap.hue = ClientPrefs.arrowHSV[noteData % 4][0] / 360;
 		colorSwap.saturation = ClientPrefs.arrowHSV[noteData % 4][1] / 100;
 		colorSwap.brightness = ClientPrefs.arrowHSV[noteData % 4][2] / 100;
+		noteSplashHue = colorSwap.hue;
+		noteSplashSat = colorSwap.saturation;
+		noteSplashBrt = colorSwap.brightness;
+		confirmHue = colorSwap.hue;
+		confirmSat = colorSwap.saturation;
+		confirmBrt = colorSwap.brightness;
 
 		if(noteData > -1 && noteType != value) {
 			switch(value) {
@@ -100,22 +124,140 @@ class Note extends FlxSprite
 					colorSwap.hue = 0;
 					colorSwap.saturation = 0;
 					colorSwap.brightness = 0;
+					noteSplashHue = colorSwap.hue;
+					noteSplashSat = colorSwap.saturation;
+					noteSplashBrt = colorSwap.brightness;
 					if(isSustainNote) {
 						missHealth = 0.1;
 					} else {
 						missHealth = 0.3;
 					}
 					hitCausesMiss = true;
+					confirmHue = colorSwap.hue;
+					confirmSat = 1;
+					confirmBrt = -50 / 100;
+				case 'Ice Note':
+					ignoreNote = true;
+					reloadNote('ICE');
+					noteSplashTexture = 'ICEnoteSplashes';
+					colorSwap.hue = 0;
+					colorSwap.saturation = 0;
+					colorSwap.brightness = 0;
+					noteSplashHue = colorSwap.hue;
+					noteSplashSat = colorSwap.saturation;
+					noteSplashBrt = colorSwap.brightness;
+					if(isSustainNote) {
+						missHealth = 0;
+					} else {
+						missHealth = 0;
+					}
+					confirmHue = -180 / 360;
+					confirmSat = -30 / 100;
+					confirmBrt = 10 / 100;
+					hitCausesMiss = true;
+				case 'Fire Note':
+					reloadNote('FIRE');
+					colorSwap.hue = 0;
+					colorSwap.saturation = 0;
+					colorSwap.brightness = 0;
+					noteSplashHue = 20 / 160;
+					noteSplashSat = 20 / 160;
+					noteSplashBrt = 20 / 160;
+					confirmHue = 15 / 360;
+					confirmSat = 1;
+					confirmBrt = 1;
+				case 'Warning Note':
+					reloadNote('WARN');
+					noteSplashTexture = 'WARNnoteSplashes';
+					colorSwap.hue = 0;
+					colorSwap.saturation = 0;
+					colorSwap.brightness = 0;
+					noteSplashHue = colorSwap.hue;
+					noteSplashSat = colorSwap.saturation;
+					noteSplashBrt = colorSwap.brightness;
+					missHealth = 0.5;
+					confirmHue = 45 / 360;
+					confirmSat = -5 / 100;
+					confirmBrt = 5 / 100;
+				case 'Bomb Note':
+					reloadNote('BOMB');
+					colorSwap.hue = 0;
+					colorSwap.saturation = 0;
+					colorSwap.brightness = 0;
+					noteSplashHue = 120 / 360;
+					noteSplashSat = -80 / 100;
+					noteSplashBrt = 0 / 100;
+					missHealth = 0;
+					hitHealth = 0;
+					ignoreNote = mustPress;
 				case 'No Animation':
 					noAnimation = true;
 				case 'GF Sing':
 					gfNote = true;
+				case 'Close Note':
+					ignoreNote = true;
+					reloadNote('CLOSE');
+					colorSwap.hue = 0;
+					colorSwap.saturation = 0;
+					colorSwap.brightness = 0;
+					noteSplashHue = colorSwap.hue;
+					noteSplashSat = colorSwap.saturation;
+					noteSplashBrt = colorSwap.brightness;
+					confirmHue = colorSwap.hue;
+					missHealth = 2;
+					hitCausesMiss = true;
+				case 'Inverse Close Note':
+					reloadNote('INVCLOSE');
+					colorSwap.hue = 0;
+					colorSwap.saturation = 0;
+					colorSwap.brightness = 0;
+					noteSplashHue = 180 / 360;
+					noteSplashSat = colorSwap.saturation;
+					noteSplashBrt = colorSwap.brightness;
+					confirmHue = 180 / 360;
+					missHealth = 2;
+				case 'Question Note':
+					reloadNote('QUESTION');
+					colorSwap.hue = 0;
+					colorSwap.saturation = 0;
+					colorSwap.brightness = 0;
+					noteSplashHue = -120 / 360;
+					noteSplashSat = -80 / 360;
+					noteSplashBrt = 0 / 360;
+					ignoreNote = true;
+					noAnimation = true;
+					confirmHue = -120 / 360;
+					confirmSat = -20 / 100;
+					confirmBrt = -20 / 100;
+				case 'Companion Note':
+					switch (noteData)
+					{
+						case 0:	   colorSwap.hue = ClientPrefs.arrowHSV[3][0] / 360;
+							colorSwap.saturation = ClientPrefs.arrowHSV[3][1] / 100;
+							colorSwap.brightness = ClientPrefs.arrowHSV[3][2] / 100;
+
+						case 1:	   colorSwap.hue = ClientPrefs.arrowHSV[2][0] / 360;
+							colorSwap.saturation = ClientPrefs.arrowHSV[2][1] / 100;
+							colorSwap.brightness = ClientPrefs.arrowHSV[2][2] / 100;
+
+						case 2:	   colorSwap.hue = ClientPrefs.arrowHSV[1][0] / 360;
+							colorSwap.saturation = ClientPrefs.arrowHSV[1][1] / 100;
+							colorSwap.brightness = ClientPrefs.arrowHSV[1][2] / 100;
+
+						case 3:	   colorSwap.hue = ClientPrefs.arrowHSV[0][0] / 360;
+							colorSwap.saturation = ClientPrefs.arrowHSV[0][1] / 100;
+							colorSwap.brightness = ClientPrefs.arrowHSV[0][2] / 100;
+					}
+					gfNote = mustPress;
+					noteSplashHue = colorSwap.hue;
+					noteSplashSat = colorSwap.saturation;
+					noteSplashBrt = colorSwap.brightness;
+					confirmHue = colorSwap.hue;
+					confirmSat = colorSwap.saturation;
+					confirmBrt = colorSwap.brightness;
 			}
 			noteType = value;
 		}
-		noteSplashHue = colorSwap.hue;
-		noteSplashSat = colorSwap.saturation;
-		noteSplashBrt = colorSwap.brightness;
 		return value;
 	}
 
@@ -167,6 +309,7 @@ class Note extends FlxSprite
 		{
 			alpha = 0.6;
 			multAlpha = 0.6;
+			hitsoundDisabled = true;
 			if(ClientPrefs.downScroll) flipY = true;
 
 			offsetX += width / 2;
@@ -205,14 +348,15 @@ class Note extends FlxSprite
 						prevNote.animation.play('redhold');
 				}
 
-				prevNote.scale.y *= Conductor.stepCrochet / 100 * 1.05;
+				prevNote.scale.y *= Conductor.stepCrochet / 100 * 1.05 * prevNote.scrollMulti;
 				if(PlayState.instance != null)
 				{
-					prevNote.scale.y *= PlayState.instance.songSpeed;
+					prevNote.scale.y *= PlayState.instance.songSpeed * prevNote.scrollMulti;
 				}
 
 				if(PlayState.isPixelStage) {
-					prevNote.scale.y *= 1.19;
+					prevNote.scale.y *= (1.19 * prevNote.scrollMulti);
+					prevNote.scale.y *= (6 / height); //Auto adjust note size
 				}
 				prevNote.updateHitbox();
 				// prevNote.setGraphicSize();
@@ -228,6 +372,9 @@ class Note extends FlxSprite
 		x += offsetX;
 	}
 
+	var lastNoteOffsetXForPixelAutoAdjusting:Float = 0;
+	var lastNoteScaleToo:Float = 1;
+	public var originalHeightForCalcs:Float = 6;
 	function reloadNote(?prefix:String = '', ?texture:String = '', ?suffix:String = '') {
 		if(prefix == null) prefix = '';
 		if(texture == null) texture = '';
@@ -256,6 +403,7 @@ class Note extends FlxSprite
 				loadGraphic(Paths.image('pixelUI/' + blahblah + 'ENDS'));
 				width = width / 4;
 				height = height / 2;
+				originalHeightForCalcs = height;
 				loadGraphic(Paths.image('pixelUI/' + blahblah + 'ENDS'), true, Math.floor(width), Math.floor(height));
 			} else {
 				loadGraphic(Paths.image('pixelUI/' + blahblah));
@@ -266,6 +414,19 @@ class Note extends FlxSprite
 			setGraphicSize(Std.int(width * PlayState.daPixelZoom));
 			loadPixelNoteAnims();
 			antialiasing = false;
+
+			if(isSustainNote) {
+				offsetX += lastNoteOffsetXForPixelAutoAdjusting;
+				lastNoteOffsetXForPixelAutoAdjusting = (width - 7) * (PlayState.daPixelZoom / 2);
+				offsetX -= lastNoteOffsetXForPixelAutoAdjusting;
+				
+				/*if(animName != null && !animName.endsWith('end'))
+				{
+					lastScaleY /= lastNoteScaleToo;
+					lastNoteScaleToo = (6 / height);
+					lastScaleY *= lastNoteScaleToo; 
+				}*/
+			}
 		} else {
 			frames = Paths.getSparrowAtlas(blahblah);
 			loadNoteAnims();

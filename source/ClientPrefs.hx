@@ -20,14 +20,20 @@ class ClientPrefs {
 	public static var camZooms:Bool = true;
 	public static var hideHud:Bool = false;
 	public static var noteOffset:Int = 0;
-	public static var arrowHSV:Array<Array<Int>> = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]];
+	public static var arrowHSV:Array<Array<Int>> = [[-100, 0, 0], [-165, 0, 0], [155, 0, 0], [-20, 0, 0]];
 	public static var imagesPersist:Bool = false;
+	public static var hideoppnotes:Bool = false;
 	public static var ghostTapping:Bool = true;
+	public static var bindrem:Bool = true;
 	public static var timeBarType:String = 'Time Left';
+	public static var uifont:String = 'VCR OSD Mono';
+	public static var iconbop:String = 'Default';
 	public static var scoreZoom:Bool = true;
 	public static var noReset:Bool = false;
 	public static var healthBarAlpha:Float = 1;
 	public static var controllerMode:Bool = false;
+	public static var hitsoundVolume:Float = 0;
+	public static var pauseMusic:String = 'Tea Time';
 	public static var gameplaySettings:Map<String, Dynamic> = [
 		'scrollspeed' => 1.0,
 		'scrolltype' => 'multiplicative', 
@@ -46,15 +52,28 @@ class ClientPrefs {
 		'instakill' => false,
 		'practice' => false,
 		'botplay' => false,
-		'opponentplay' => false
+		'opponentplay' => false,
+		'modcharts' => true,
+		'sickonly' => false,
+		'funni' => false
 	];
 
 	public static var comboOffset:Array<Int> = [0, 0, 0, 0];
+	public static var keSustains:Bool = false; //i was bored, okay?
+	public static var newpausemenu:Bool = false; //i was bored, okay?
+	public static var ogbar:Bool = false; //i was bored, okay?
+	public static var social:Int = 100;
 	public static var ratingOffset:Int = 0;
 	public static var sickWindow:Int = 45;
 	public static var goodWindow:Int = 90;
 	public static var badWindow:Int = 135;
 	public static var safeFrames:Float = 10;
+	public static var laneAlpha:Float = 0;
+	public static var timeBarLook:String = 'Psych Engine';
+	public static var jumpscare:String = 'Normal';
+	public static var asd:Bool = false; //i was bored, okay?
+	public static var notemove:Bool = false; //i was bored, okay?
+	public static var ratinghud:Bool = true; //i was bored, okay?
 
 	//Every key has two binds, add your key bind down here and then add your control on options/ControlsSubState.hx and Controls.hx
 	public static var keyBinds:Map<String, Array<FlxKey>> = [
@@ -63,6 +82,7 @@ class ClientPrefs {
 		'note_down'		=> [S, DOWN],
 		'note_up'		=> [W, UP],
 		'note_right'	=> [D, RIGHT],
+		'note_spc'		=> [SPACE, NONE],
 		
 		'ui_left'		=> [A, LEFT],
 		'ui_down'		=> [S, DOWN],
@@ -97,8 +117,10 @@ class ClientPrefs {
 		FlxG.save.data.noteSplashes = noteSplashes;
 		FlxG.save.data.lowQuality = lowQuality;
 		FlxG.save.data.framerate = framerate;
-		//FlxG.save.data.cursing = cursing;
-		//FlxG.save.data.violence = violence;
+		FlxG.save.data.ogbar = ogbar;
+		FlxG.save.data.jumpscare = jumpscare;
+		FlxG.save.data.ratinghud = ratinghud;
+		FlxG.save.data.hideoppnotes = hideoppnotes;
 		FlxG.save.data.camZooms = camZooms;
 		FlxG.save.data.noteOffset = noteOffset;
 		FlxG.save.data.hideHud = hideHud;
@@ -106,13 +128,21 @@ class ClientPrefs {
 		FlxG.save.data.imagesPersist = imagesPersist;
 		FlxG.save.data.ghostTapping = ghostTapping;
 		FlxG.save.data.timeBarType = timeBarType;
+		FlxG.save.data.uifont = uifont;
+		FlxG.save.data.newpausemenu = newpausemenu;
+		FlxG.save.data.showdiscmenu = asd;
+		FlxG.save.data.bindrem = bindrem;
+		FlxG.save.data.timeBarLook = timeBarLook;
+		FlxG.save.data.iconbop = iconbop;
+		FlxG.save.data.socialcredit = social;
 		FlxG.save.data.scoreZoom = scoreZoom;
 		FlxG.save.data.noReset = noReset;
+		FlxG.save.data.laneAlpha = laneAlpha;
 		FlxG.save.data.healthBarAlpha = healthBarAlpha;
 		FlxG.save.data.comboOffset = comboOffset;
 		FlxG.save.data.achievementsMap = Achievements.achievementsMap;
 		FlxG.save.data.henchmenDeath = Achievements.henchmenDeath;
-
+		FlxG.save.data.notemove = notemove;
 		FlxG.save.data.ratingOffset = ratingOffset;
 		FlxG.save.data.sickWindow = sickWindow;
 		FlxG.save.data.goodWindow = goodWindow;
@@ -120,6 +150,8 @@ class ClientPrefs {
 		FlxG.save.data.safeFrames = safeFrames;
 		FlxG.save.data.gameplaySettings = gameplaySettings;
 		FlxG.save.data.controllerMode = controllerMode;
+		FlxG.save.data.hitsoundVolume = hitsoundVolume;
+		FlxG.save.data.pauseMusic = pauseMusic;
 	
 		FlxG.save.flush();
 
@@ -146,6 +178,30 @@ class ClientPrefs {
 		if(FlxG.save.data.flashing != null) {
 			flashing = FlxG.save.data.flashing;
 		}
+		if(FlxG.save.data.laneAlpha != null) {
+			laneAlpha = FlxG.save.data.laneAlpha;
+		}
+		if(FlxG.save.data.ratinghud != null) {
+			ratinghud = FlxG.save.data.ratinghud;
+		}
+		if(FlxG.save.data.bindrem != null) {
+			bindrem = FlxG.save.data.bindrem;
+		}
+		if(FlxG.save.data.newpausemenu != null) {
+			newpausemenu = FlxG.save.data.newpausemenu;
+		}
+		if(FlxG.save.data.showdiscmenu != null) {
+			asd = FlxG.save.data.showdiscmenu;
+		}
+		if(FlxG.save.data.ogbar != null) {
+			ogbar = FlxG.save.data.ogbar;
+		}
+		if(FlxG.save.data.notemove != null) {
+			notemove = FlxG.save.data.notemove;
+		}
+		if(FlxG.save.data.jumpscare != null) {
+			jumpscare = FlxG.save.data.jumpscare;
+		}
 		if(FlxG.save.data.globalAntialiasing != null) {
 			globalAntialiasing = FlxG.save.data.globalAntialiasing;
 		}
@@ -171,6 +227,12 @@ class ClientPrefs {
 		if(FlxG.save.data.violence != null) {
 			violence = FlxG.save.data.violence;
 		}*/
+		if(FlxG.save.data.timeBarLook != null) {
+			timeBarLook = FlxG.save.data.timeBarLook;
+		}
+		if(FlxG.save.data.hideoppnotes != null) {
+			hideoppnotes = FlxG.save.data.hideoppnotes;
+		}
 		if(FlxG.save.data.camZooms != null) {
 			camZooms = FlxG.save.data.camZooms;
 		}
@@ -179,6 +241,9 @@ class ClientPrefs {
 		}
 		if(FlxG.save.data.noteOffset != null) {
 			noteOffset = FlxG.save.data.noteOffset;
+		}
+		if(FlxG.save.data.socialcredit != null) {
+			social = FlxG.save.data.socialcredit;
 		}
 		if(FlxG.save.data.arrowHSV != null) {
 			arrowHSV = FlxG.save.data.arrowHSV;
@@ -189,6 +254,13 @@ class ClientPrefs {
 		if(FlxG.save.data.timeBarType != null) {
 			timeBarType = FlxG.save.data.timeBarType;
 		}
+		if(FlxG.save.data.uifont != null) {
+			uifont = FlxG.save.data.uifont;
+		} 
+
+		if(FlxG.save.data.iconbop != null) {
+			iconbop = FlxG.save.data.iconbop;
+		} 
 		if(FlxG.save.data.scoreZoom != null) {
 			scoreZoom = FlxG.save.data.scoreZoom;
 		}
@@ -219,6 +291,12 @@ class ClientPrefs {
 		}
 		if(FlxG.save.data.controllerMode != null) {
 			controllerMode = FlxG.save.data.controllerMode;
+		}
+		if(FlxG.save.data.hitsoundVolume != null) {
+			hitsoundVolume = FlxG.save.data.hitsoundVolume;
+		}
+		if(FlxG.save.data.pauseMusic != null) {
+			pauseMusic = FlxG.save.data.pauseMusic;
 		}
 		if(FlxG.save.data.gameplaySettings != null)
 		{

@@ -42,6 +42,7 @@ typedef AnimArray = {
 	var loop:Bool;
 	var indices:Array<Int>;
 	var offsets:Array<Int>;
+	var camera_offsets:Array<Float>;
 }
 
 class Character extends FlxSprite
@@ -61,13 +62,13 @@ class Character extends FlxSprite
 	public var singDuration:Float = 4; //Multiplier of how long a character holds the sing pose
 	public var idleSuffix:String = '';
 	public var danceIdle:Bool = false; //Character use "danceLeft" and "danceRight" instead of "idle"
-	
 
 	public var healthIcon:String = 'face';
 	public var animationsArray:Array<AnimArray> = [];
 
 	public var positionArray:Array<Float> = [0, 0];
 	public var cameraPosition:Array<Float> = [0, 0];
+	public var cameraOffset:Array<Float> = [0, 0];
 
 	public var hasMissAnimations:Bool = false;
 
@@ -77,7 +78,7 @@ class Character extends FlxSprite
 	public var noAntialiasing:Bool = false;
 	public var originalFlipX:Bool = false;
 	public var healthColorArray:Array<Int> = [255, 0, 0];
-
+	var colorSwap:ColorSwap = new ColorSwap();
 	public static var DEFAULT_CHARACTER:String = 'bf'; //In case a character is missing, it will use BF on its place
 	public function new(x:Float, y:Float, ?character:String = 'bf', ?isPlayer:Bool = false)
 	{
@@ -98,20 +99,14 @@ class Character extends FlxSprite
 
 			default:
 				var characterPath:String = 'characters/' + curCharacter + '.json';
+
 				#if MODS_ALLOWED
-				
-				
-				
-				
 				var path:String = Paths.modFolders(characterPath);
 				if (!FileSystem.exists(path)) {
 					path = Paths.getPreloadPath(characterPath);
 				}
 
 				if (!FileSystem.exists(path))
-				
-				
-				
 				#else
 				var path:String = Paths.getPreloadPath(characterPath);
 				if (!Assets.exists(path))
@@ -143,13 +138,8 @@ class Character extends FlxSprite
 				if (Assets.exists(Paths.getPath('images/' + json.image + '.txt', TEXT)))
 				#end
 				{
-					
 					spriteType = "packer";
-					
 				}
-				
-				
-				
 				
 				#if MODS_ALLOWED
 				var modAnimToFind:String = Paths.modFolders('images/' + json.image + '/Animation.json');
@@ -163,14 +153,9 @@ class Character extends FlxSprite
 				if (Assets.exists(Paths.getPath('images/' + json.image + '/Animation.json', TEXT)))
 				#end
 				{
-					
 					spriteType = "texture";
-					
 				}
-				
-				
-				
-				
+
 				switch (spriteType){
 					
 					case "packer":
@@ -181,10 +166,7 @@ class Character extends FlxSprite
 					
 					case "texture":
 						frames = AtlasFrameMaker.construct(json.image);
-						
-						
 				}
-				
 				imageFile = json.image;
 
 				if(json.scale != 1) {
@@ -263,6 +245,7 @@ class Character extends FlxSprite
 				}
 			}*/
 		}
+		this.shader = colorSwap.shader;
 	}
 
 	override function update(elapsed:Float)
@@ -286,7 +269,27 @@ class Character extends FlxSprite
 				specialAnim = false;
 				dance();
 			}
+			for (anim in animationsArray) {
+				var animAnim:String = '' + anim.anim;
+				if (anim.camera_offsets != null) {
+					cameraOffset = anim.camera_offsets;
+				} else {
+					cameraOffset = [0, 0];
+				}
+				/*var animName:String = '' + anim.name;
+				var animFps:Int = anim.fps;
+				var animLoop:Bool = !!anim.loop; //Bruh
+				var animIndices:Array<Int> = anim.indices;
+				if(animIndices != null && animIndices.length > 0) {
+					animation.addByIndices(animAnim, animName, animIndices, "", animFps, animLoop);
+				} else {
+					animation.addByPrefix(animAnim, animName, animFps, animLoop);
+				}
 
+				if(anim.offsets != null && anim.offsets.length > 1) {
+					addOffset(anim.anim, anim.offsets[0], anim.offsets[1]);
+				}*/
+			}
 			if (!isPlayer)
 			{
 				if (animation.curAnim.name.startsWith('sing'))
@@ -364,8 +367,27 @@ class Character extends FlxSprite
 		}
 	}
 
+	public var danceEveryNumBeats:Int = 2;
+	private var settingCharacterUp:Bool = true;
 	public function recalculateDanceIdle() {
+		var lastDanceIdle:Bool = danceIdle;
 		danceIdle = (animation.getByName('danceLeft' + idleSuffix) != null && animation.getByName('danceRight' + idleSuffix) != null);
+
+		if(settingCharacterUp)
+		{
+			danceEveryNumBeats = (danceIdle ? 1 : 2);
+		}
+		else if(lastDanceIdle != danceIdle)
+		{
+			var calc:Float = danceEveryNumBeats;
+			if(danceIdle)
+				calc /= 2;
+			else
+				calc *= 2;
+
+			danceEveryNumBeats = Math.round(Math.max(calc, 1));
+		}
+		settingCharacterUp = false;
 	}
 
 	public function addOffset(name:String, x:Float = 0, y:Float = 0)
